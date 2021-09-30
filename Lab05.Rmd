@@ -68,14 +68,56 @@ stationAvg <- met[,.(
 
 Identifying quantiles for variables of interest
 ```{r}
-stationAvg[,.(
+medians = stationAvg[,.(
   temp50 = quantile(temp, probs= .5, na.rm= TRUE),
-  wind.sp = quantile(wind.sp, probs= .5, na.rm= TRUE),
-  atm.press = quantile(atm.press, probs= .5, na.rm= TRUE)
+  wind50 = quantile(wind.sp, probs= .5, na.rm= TRUE),
+  atm50 = quantile(atm.press, probs= .5, na.rm= TRUE)
 )]
 ```
 
+Finding station closest to mean
+```{r}
+stationAvg[, temp_dist := abs(temp- medians$temp50)]
+medianTempStation = stationAvg[order(temp_dist)][1]
 
+stationAvg[, wind_dist := abs(wind.sp- medians$wind50)]
+medianWindStation = stationAvg[order(wind_dist)][1]
 
+stationAvg[, atm_dist := abs(atm.press- medians$atm50)]
+medianAtmStation = stationAvg[order(atm_dist)][1]
+```
+
+The station that is best representative of the median temperature of all stations is `r medianTempStation$USAFID`
+The station that is best representative of the median wind speed of all stations is `r medianWindStation$USAFID`
+The station that is best representative of the median atmospheric pressure of all stations is `r medianAtmStation$USAFID`
+
+# 2. Representative Station per State
+
+First, we recover state variable via MERGE
+```{r}
+stationStates = merge(
+  x = stationAvg, y = stations,
+  by.x = "USAFID", by.y = "USAF",
+  all.x = TRUE, all.y = FALSE
+  )
+```
+
+Now, computing medians per state & eucledian distance
+```{r}
+stationStates[, temp50 := quantile(temp, probs = .5, na.rm = TRUE), by = STATE]
+stationStates[, wind50 := quantile(wind.sp, probs = .5, na.rm = TRUE), by = STATE]
+stationStates[, atm50 := quantile(atm.press, probs = .5, na.rm = TRUE), by = STATE]
+
+stationStates[, eudist := sqrt(
+  (temp - temp50)^2 + (wind.sp - wind50)^2
+  )]
+stationStates
+
+medianStateStation = stationStates[order(STATE, eudist)]
+```
+
+You can now go through medianStateStation data table to find the most representative per state. For example, in CA, it is station 722970.
+
+# 3. In the middle?
 
 
