@@ -142,3 +142,48 @@ You can now go through medianStateStation data table to find the most
 representative per state. For example, in CA, it is station 722970.
 
 # 3. In the middle?
+
+For each state, identify what is the station that is closest to the
+mid-point of the state. Combining these with the stations you identified
+in the previous question, use leaflet() to visualize all \~100 points in
+the same figure, applying different colors for those identified in this
+question.
+
+# 4. Means of Means
+
+Using the quantile() function, generate a summary table that shows the
+number of states included, average temperature, wind-speed, and
+atmospheric pressure by the variable “average temperature level,” which
+you’ll need to create.
+
+First, we create the avg temp level from the met dataset & remove any
+NA’s
+
+``` r
+met[, state_temp := mean(temp, na.rm = TRUE), by = STATE]
+met[, temp_level := fifelse(
+  state_temp < 20, "low-temp", 
+  fifelse(state_temp < 25, "mid-temp", "high-temp"))
+  ]
+
+table(met$temp_level, useNA = "always")
+```
+
+    ## 
+    ## high-temp  low-temp  mid-temp      <NA> 
+    ##    811126    430794   1135423         0
+
+Next, we make the summary table
+
+``` r
+met[, .(
+  N_entries  = .N,
+  N_stations = length(unique(USAFID))
+), by = temp_level] %>% knitr::kable()
+```
+
+| temp\_level | N\_entries | N\_stations |
+|:------------|-----------:|------------:|
+| mid-temp    |    1135423 |         781 |
+| high-temp   |     811126 |         555 |
+| low-temp    |     430794 |         259 |
