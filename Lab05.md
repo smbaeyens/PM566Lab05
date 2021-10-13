@@ -187,3 +187,5 @@ met[, .(
 | mid-temp    |    1135423 |         781 |
 | high-temp   |     811126 |         555 |
 | low-temp    |     430794 |         259 |
+
+All done!
